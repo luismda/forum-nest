@@ -2,38 +2,43 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Post,
-  UsePipes,
+  HttpCode,
+  Param,
+  Put,
 } from '@nestjs/common'
 import { z } from 'zod'
 
-import { CreateQuestionUseCase } from '@/domain/forum/application/use-cases/create-question'
+import { EditQuestionUseCase } from '@/domain/forum/application/use-cases/edit-question'
 import { CurrentUser } from '@/infra/auth/current-user-decorator'
 import { UserPayload } from '@/infra/auth/jwt.strategy'
 
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 
-const createQuestionBodySchema = z.object({
+const editQuestionBodySchema = z.object({
   title: z.string().trim().min(1),
   content: z.string().trim().min(1),
 })
 
-type CreateQuestionBodySchema = z.infer<typeof createQuestionBodySchema>
+const validationPipe = new ZodValidationPipe(editQuestionBodySchema)
 
-@Controller('/questions')
-export class CreateQuestionController {
-  constructor(private createQuestion: CreateQuestionUseCase) {}
+type EditQuestionBodySchema = z.infer<typeof editQuestionBodySchema>
 
-  @Post()
-  @UsePipes(new ZodValidationPipe(createQuestionBodySchema))
+@Controller('/questions/:id')
+export class EditQuestionController {
+  constructor(private editQuestion: EditQuestionUseCase) {}
+
+  @Put()
+  @HttpCode(204)
   async handle(
-    @Body() body: CreateQuestionBodySchema,
     @CurrentUser() user: UserPayload,
+    @Param('id') questionId: string,
+    @Body(validationPipe) body: EditQuestionBodySchema,
   ) {
     const { title, content } = body
     const userId = user.sub
 
-    const result = await this.createQuestion.execute({
+    const result = await this.editQuestion.execute({
+      questionId,
       title,
       content,
       authorId: userId,
