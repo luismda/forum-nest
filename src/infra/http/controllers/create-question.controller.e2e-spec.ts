@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
+import { AttachmentFactory } from 'test/factories/make-attachment'
 import { StudentFactory } from 'test/factories/make-student'
 
 import { AppModule } from '@/infra/app.module'
@@ -12,18 +13,20 @@ describe('Create question (E2E)', () => {
   let app: INestApplication
   let prisma: PrismaService
   let studentFactory: StudentFactory
+  let attachmentFactory: AttachmentFactory
   let jwt: JwtService
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule, DatabaseModule],
-      providers: [StudentFactory],
+      providers: [StudentFactory, AttachmentFactory],
     }).compile()
 
     app = moduleRef.createNestApplication()
 
     prisma = moduleRef.get(PrismaService)
     studentFactory = moduleRef.get(StudentFactory)
+    attachmentFactory = moduleRef.get(AttachmentFactory)
 
     jwt = moduleRef.get(JwtService)
 
@@ -34,12 +37,16 @@ describe('Create question (E2E)', () => {
     const user = await studentFactory.makePrismaStudent()
     const accessToken = jwt.sign({ sub: user.id.toString() })
 
+    const attachmentOne = await attachmentFactory.makePrismaAttachment()
+    const attachmentTwo = await attachmentFactory.makePrismaAttachment()
+
     const response = await request(app.getHttpServer())
       .post('/questions')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
         title: 'New question',
         content: 'Question content',
+        attachments: [attachmentOne.id.toString(), attachmentTwo.id.toString()],
       })
 
     expect(response.statusCode).toBe(201)
@@ -51,5 +58,13 @@ describe('Create question (E2E)', () => {
     })
 
     expect(questionOnDatabase).toBeTruthy()
+
+    const questionAttachmentsOnDatabase = await prisma.attachment.findMany({
+      where: {
+        questionId: questionOnDatabase?.id,
+      },
+    })
+
+    expect(questionAttachmentsOnDatabase).toHaveLength(2)
   })
 })
