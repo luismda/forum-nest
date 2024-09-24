@@ -17,7 +17,7 @@ import { ZodValidationPipe } from '../pipes/zod-validation-pipe'
 const editQuestionBodySchema = z.object({
   title: z.string().trim().min(1),
   content: z.string().trim().min(1),
-  attachments: z.array(z.string().uuid()),
+  attachments: z.array(z.string().uuid()).default([]),
 })
 
 const validationPipe = new ZodValidationPipe(editQuestionBodySchema)
