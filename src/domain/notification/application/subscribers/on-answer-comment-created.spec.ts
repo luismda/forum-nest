@@ -4,6 +4,7 @@ import { InMemoryAnswerAttachmentsRepository } from 'test/repositories/in-memory
 import { InMemoryAnswerCommentsRepository } from 'test/repositories/in-memory-answer-comments-repository'
 import { InMemoryAnswersRepository } from 'test/repositories/in-memory-answers-repository'
 import { InMemoryNotificationsRepository } from 'test/repositories/in-memory-notifications-repository'
+import { InMemoryStudentsRepository } from 'test/repositories/in-memory-students-repository'
 import { waitFor } from 'test/utils/wait-for'
 import { MockInstance } from 'vitest'
 
@@ -13,6 +14,7 @@ import { OnAnswerCommentCreated } from './on-answer-comment-created'
 let inMemoryAnswerAttachmentsRepository: InMemoryAnswerAttachmentsRepository
 let inMemoryAnswerCommentsRepository: InMemoryAnswerCommentsRepository
 let inMemoryNotificationsRepository: InMemoryNotificationsRepository
+let inMemoryStudentsRepository: InMemoryStudentsRepository
 let inMemoryAnswersRepository: InMemoryAnswersRepository
 
 let sendNotificationUseCase: SendNotificationUseCase
@@ -28,7 +30,12 @@ describe('on answer comment created subscriber', () => {
       inMemoryAnswerAttachmentsRepository,
     )
 
-    inMemoryAnswerCommentsRepository = new InMemoryAnswerCommentsRepository()
+    inMemoryStudentsRepository = new InMemoryStudentsRepository()
+
+    inMemoryAnswerCommentsRepository = new InMemoryAnswerCommentsRepository(
+      inMemoryStudentsRepository,
+    )
+
     inMemoryNotificationsRepository = new InMemoryNotificationsRepository()
 
     sendNotificationUseCase = new SendNotificationUseCase(
