@@ -28,8 +28,8 @@ export class PrismaQuestionDetailsMapper {
       title: raw.title,
       author: raw.author.name,
       content: raw.content,
-      createdAt: raw.createdAt,
-      updatedAt: raw.updatedAt,
+      createdAt: new Date(raw.createdAt),
+      updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : null,
     })
   }
 }
